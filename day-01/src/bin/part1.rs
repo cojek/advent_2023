@@ -1,12 +1,12 @@
 fn main() {
     let input = include_str!("./input1.txt");
-    let output = part1(input);
+    let output = part1(input.to_string());
     dbg!(output);
 }
 
-fn part1(input: &str) -> i32 {
+fn part1(input: String) -> i32 {
     input
-        .split_terminator('\n')
+        .lines()
         .fold(0, |acc, line| {
             let mut first: Option<char> = None;
             let mut last: Option<char> = None;
@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = include_str!("./example1.txt");
+        let input = include_str!("./example1.txt").to_string();
         let want = include_str!("./answer1.txt").parse::<i32>().expect("could not parse answer1.txt");
 
         let got = part1(input);

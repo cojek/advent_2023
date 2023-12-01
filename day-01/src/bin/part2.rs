@@ -1,5 +1,5 @@
 fn main() {
-    let input = include_str!("./input1.txt");
+    let input = include_str!("./input1.txt").to_string();
     let output = part2(input);
     dbg!(output);
 }
@@ -11,77 +11,59 @@ fn append_char(buf: &mut [char; 5], c: char) {
     buf[4] = c;
 }
 
-fn check_for_written_digit(buf: [char; 5]) -> Option<char> {
-    let mut out = None;
-    if buf[2..5].iter().collect::<String>() == "one" {
-        out = Some('1');
-    }
-    if buf[2..5].iter().collect::<String>() == "two" {
-        out = Some('2');
-    }
-    if buf[0..5].iter().collect::<String>() == "three" {
-        out = Some('3');
-    }
-    if buf[1..5].iter().collect::<String>() == "four" {
-        out = Some('4');
-    }
-    if buf[1..5].iter().collect::<String>() == "five" {
-        out = Some('5');
-    }
-    if buf[2..5].iter().collect::<String>() == "six" {
-        out = Some('6');
-    }
-    if buf[0..5].iter().collect::<String>() == "seven" {
-        out = Some('7');
-    }
-    if buf[0..5].iter().collect::<String>() == "eight" {
-        out = Some('8');
-    }
-    if buf[1..5].iter().collect::<String>() == "nine" {
-        out = Some('9');
-    }
+fn check_for_written_digit(buf: [char; 5]) -> Option<u32> {
+    let digits: Vec<String> = vec![
+        "one".to_string(),
+        "two".to_string(),
+        "three".to_string(),
+        "four".to_string(),
+        "five".to_string(),
+        "six".to_string(),
+        "seven".to_string(),
+        "eight".to_string(),
+        "nine".to_string(),
+    ];
 
-    out
+    for (idx, val) in digits.iter().enumerate() {
+        if buf[5 - val.len()..5].iter().collect::<String>().eq(val) {
+            return Some((idx + 1) as u32);
+        }
+    }
+    None
 }
 
-fn part2(input: &str) -> i32 {
+fn part2(input: String) -> u32 {
     input
-        .split_terminator('\n')
-        .map(|s| s.trim())
+        .lines()
         .fold(0, |acc, line| {
-            let mut first: Option<char> = None;
-            let mut last: Option<char> = None;
+            let mut first: u32 = 0;
+            let mut last: u32 = 0;
 
             let mut buffer = ['0'; 5];
             for c in line.chars() {
-                let mut c = c;
-
-                // Check written
                 append_char(&mut buffer, c);
-                match check_for_written_digit(buffer) {
-                    None => {}
-                    Some(d) => c = d
-                }
-
 
                 // Check digits
-                if c.is_ascii_digit() {
-                    if first.is_none() {
-                        first = Some(c);
+                let mut i: u32 = 0;
+                if let Some(u) = c.to_digit(10) {
+                    i = u;
+                } else {
+                    // Check written out
+                    match check_for_written_digit(buffer) {
+                        None => {}
+                        Some(u) => i = u
                     }
-                    last = Some(c);
+                }
+
+                if i != 0 {
+                    if first == 0 {
+                        first = i;
+                    }
+                    last = i;
                 }
             }
 
-
-            let out = match first {
-                None => 0,
-                Some(c) => {
-                    format!("{}{}", c, last.unwrap()).parse::<i32>().unwrap_or_else(|_| panic!("could not parse: {}{}", c, last.unwrap()))
-                }
-            };
-
-            acc + out
+            acc + (10 * first + last)
         })
 }
 
@@ -100,9 +82,27 @@ mod tests {
     }
 
     #[test]
+    fn test_example_1() {
+        let input = include_str!("./example1.txt").to_string();
+        let want = include_str!("./answer1.txt").parse::<u32>().expect("could not parse answer1.txt");
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn test_example_2() {
+        let input = include_str!("./example2.txt").to_string();
+        let want = include_str!("./answer2.txt").parse::<u32>().expect("could not parse answer2.txt");
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
     fn test_1() {
-        let input = include_str!("./example1.txt");
-        let want = include_str!("./answer1.txt").parse::<i32>().expect("could not parse answer1.txt");
+        let input = "1".to_string();
+        let want: u32 = 11;
 
         let got = part2(input);
         assert_eq!(got, want);
@@ -110,8 +110,44 @@ mod tests {
 
     #[test]
     fn test_2() {
-        let input = include_str!("./example2.txt");
-        let want = include_str!("./answer2.txt").parse::<i32>().expect("could not parse answer2.txt");
+        let input = "12".to_string();
+        let want: u32 = 12;
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn test_3() {
+        let input = "one2".to_string();
+        let want: u32 = 12;
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn test_4() {
+        let input = "onetwo".to_string();
+        let want: u32 = 12;
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn test_5() {
+        let input = "1two".to_string();
+        let want: u32 = 12;
+
+        let got = part2(input);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn test_6() {
+        let input = "1two\noneight".to_string();
+        let want: u32 = 30;
 
         let got = part2(input);
         assert_eq!(got, want);
